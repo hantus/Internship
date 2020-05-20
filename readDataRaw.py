@@ -3,12 +3,12 @@ import os
 import cv2
 import math
 import time
-# import busio
-# import board
+import busio
+import board
 import numpy as np
 
 
-# import adafruit_amg88xx
+import adafruit_amg88xx
 
 # take a folder name passed as arg
 if len(sys.argv) < 3:
@@ -21,19 +21,18 @@ frames = int(sys.argv[2])
 
 
 # initialize sensor
-# i2c_bus = busio.I2C(board.SCL, board.SDA)
-# sensor = adafruit_amg88xx.AMG88XX(i2c_bus)
+i2c_bus = busio.I2C(board.SCL, board.SDA)
+sensor = adafruit_amg88xx.AMG88XX(i2c_bus)
 
 
 time.sleep(2)
 readings = []
 for i in range(frames):
-        # data = sensor.pixels
-        # frame = np.asfarray(data)
-        a = np.random.rand(2,2)
-        readings.append(a)
-
         print(i)
+        data = sensor.pixels
+        frame = np.asfarray(data)
+        readings.append(frame)
+
 
 # convert into np array
 readings = np.asfarray(readings)
