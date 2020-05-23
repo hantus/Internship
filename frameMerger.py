@@ -15,7 +15,6 @@ mergeFrames = int(sys.argv[2])
 
 data = np.load('data/'+str(file)+'.npy')
 frames = data.shape[0]
-print(frames)
 mergedFrames = []
 
 
