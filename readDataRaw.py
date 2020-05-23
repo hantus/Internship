@@ -12,7 +12,7 @@ import adafruit_amg88xx
 
 # take a folder name passed as arg
 if len(sys.argv) < 3:
-        print('#usage readData.py folderName numFrames')
+        print('#usage readData.py fileName numFrames')
         sys.exit()
 
 folder = str(sys.argv[1])
