@@ -8,6 +8,12 @@ import math
 import sys
 
 
+if len(sys.argv) < 2:
+    print('#usage clusterDet.py fileName')
+    sys.exit()
+
+file = str(sys.argv[1])
+
 class TrackedCluster:
 
     def __init__(self, id, x, y):
@@ -128,11 +134,9 @@ def checkNeighbors(arr, i, j, custNo):
     return arr, num + 1, xdim + i, ydim + j
 
 
-if len(sys.argv) < 2:
-    print('#usage dataViewer.py fileName')
-    sys.exit()
 
-file = str(sys.argv[1])
+
+
 
 data = np.load('data/'+file+'.npy')
 threshold = 23
