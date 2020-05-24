@@ -20,10 +20,11 @@ class TrackedCluster:
         self.id = id
         self.x = x
         self.y = y
+        # allows for a cluster not to be detected in 2 frames in a row
         self.frequency = 3
         self.assigned = True
 
-
+# cluster id generator
 class IdTracker:
     def __init__(self):
         self.pool = 10
@@ -38,32 +39,21 @@ class IdTracker:
     def releaseID(self, id):
         self.list[id] = True
 
-
+# returns an image with line drawn onto it
 def drawLine(img):
     start_point = (200, 0)
     end_point = (200, 400)
-
-    # Green color in BGR
     color = (0, 0, 255)
-
-    # Line thickness of 2 px
     thickness = 2
-
-    # Using cv2.line() method
-    # Draw a diagonal green line with thickness of 2 px
     return cv2.line(img, start_point, end_point, color, thickness)
 
-
+# checks if a line was crosses
 def crossedLine(prevY, currentY, line):
-    # if (prev[0] == 0) & (prev[1] == 0):
-    #     return 0
     if (prevY >= line) & (currentY < line):
         return -1
     if (prevY <= line) & (currentY > line):
         return 1
     return 0
-
-
 
 
 class Cluster:
@@ -73,37 +63,39 @@ class Cluster:
         self.x = x
         self.y = y
 
+# returns distance between 2 clusters (their mid-points)
 def clusterDistance(c1, c2):
     return math.sqrt(pow(((c1.x - c2.x)/2), 2) + pow((c1.y - c2.y), 2))
 
+# merges 2 clusters into 1
 def mergeClusters(c1, c2):
     newCluster = Cluster(c1.id, 2, (c1.x + c2.x)/2, (c1.y + c2.y)/2)
     return newCluster
 
+# performs clustering on an image provided as an np array
+# returns 
 def clusterData(arr):
     clusters = []
-    clusterNo = 2
+    clusterID = 2
     size = arr.shape
     for i in range(size[1]):
         for j in range(size[0]):
             if arr[i][j] == 1:
-                # check neighbours
-                cluster = clusterNo
-                arr[i][j] = clusterNo
-                
-                arr, num, xdim, ydim = checkNeighbors(arr, i, j, clusterNo)
-                occurrences = np.count_nonzero(arr == clusterNo)
-                clust = Cluster(clusterNo, num, (xdim/occurrences) +0.5, (ydim/occurrences)+0.5)
+                cluster = clusterID
+                arr[i][j] = clusterID
+                # recursively find all points of the cluster
+                arr, xdim, ydim = checkNeighbors(arr, i, j, clusterID)
+                occurrences = np.count_nonzero(arr == clusterID)
+                clust = Cluster(clusterID, occurrences, (xdim/occurrences) +0.5, (ydim/occurrences)+0.5)
                 clusters.append(clust)
-                print("Cluster has {} points and its center is at [{}][{}], occurences {}".format(num, xdim/num, ydim/num, occurrences))
-                clusterNo += 1
+                clusterID += 1
     # merge nearby clusters
     mergedClusters = []
     while len(clusters) > 1:
         tempCluster = clusters.pop(0)
         merged = 0
         for clust in clusters:
-            if clusterDistance(tempCluster, clust) < 3:
+            if clusterDistance(tempCluster, clust) < 2:
                 mergedClust = mergeClusters(tempCluster, clust)
                 mergedClusters.append(mergedClust)
                 clusters.remove(clust)
@@ -117,9 +109,8 @@ def clusterData(arr):
 
     return arr, mergedClusters
 
-
+# recursively looks for all pixels that belong to the same cluster
 def checkNeighbors(arr, i, j, custNo):
-    num = 0
     xdim = 0
     ydim = 0
     
@@ -127,47 +118,39 @@ def checkNeighbors(arr, i, j, custNo):
         for y in range(max(0, j-1),min(8, j+2)):
             if arr[x][y] == 1:
                 arr[x][y] = custNo
-                arr, numR, xdimR, ydimR = checkNeighbors(arr, x, y, custNo)
-                num =+ numR
+                arr, xdimR, ydimR = checkNeighbors(arr, x, y, custNo)
                 xdim += xdimR
                 ydim += ydimR 
-    return arr, num + 1, xdim + i, ydim + j
+    return arr, xdim + i, ydim + j
 
 
-
-
-
-
+# load data file
 data = np.load('data/'+file+'.npy')
+# binarize the data 
 threshold = 23
 data = (data > threshold).astype(np.int_)
 frames = data.shape[0]
-index = 0
 trackedClusters = []
 idTracker = IdTracker()
 people = 0
 
 for i in range(frames):
-    print(index)
     data[i], clusters = clusterData(data[i])
 
-
-    print(data[i])
-    index += 1
     cv2.imwrite('data/temp/pic.png', data[i])
-    frame = cv2.imread('data/temp/pic.png')#, cv2.IMREAD_GRAYSCALE)
+    frame = cv2.imread('data/temp/pic.png')
     ret, frame = cv2.threshold(frame, 0, 255, cv2.THRESH_BINARY_INV)
     frame = cv2.resize(frame, (400, 400), interpolation=cv2.INTER_NEAREST)
-    # add 1 pixel border for blob detection to work at edges
+    
+    # add 1 pixel border 
     frame = cv2.copyMakeBorder(
         frame, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=255)
 
-
+    # marked all tracked clusters as not assigned
     for cl in trackedClusters:
         cl.assigned = False
-
     
-    # track clusters
+    # assign found clusters to tracked clusters
     if len(clusters) > 0:
         for cl in clusters:
             # assign the cluster to the nearest tracked cluster if exists
@@ -178,29 +161,32 @@ for i in range(frames):
                         (trackedCl.y - cl.y), 2))
                 if dist < distance:
                     nearest = trackedCl
-
+            # if we found a near cluster assigned it to tracked cluster
             if nearest != None:
-                print("near cluster found")
                 people += crossedLine(nearest.y, cl.y, 4)
                 nearest.x = cl.x
                 nearest.y = cl.y
                 nearest.assigned = True
+            # else create a new tracked cluster
             else:
-                print('creating new tracked cluster')
                 newTrackedCluster = TrackedCluster(idTracker.getID(), cl.x, cl.y)
                 trackedClusters.append(newTrackedCluster)
-
+    # decrease frequency of tracked clusters that were not found and delete if frequency reaches 0
     for trackedCl in trackedClusters:
         if trackedCl.assigned == False:
             trackedCl.frequency -= 1
             if trackedCl.frequency == 0:
                 idTracker.releaseID(trackedCl.id)
                 trackedClusters.remove(trackedCl)
+        else :
+            # reset frequency of all assigned clusters to 3 
+            trackedCl.frequency = 3
 
     
-
-    cv2.putText(frame, str(people), (20, 380),
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    # display number of ppl in the room
+    cv2.putText(frame, str(people), (20, 380),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    # display frame number
+    cv2.putText(frame, str(i), (20, 25),cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
     frame = drawLine(frame)
 
     for cluster in clusters:
