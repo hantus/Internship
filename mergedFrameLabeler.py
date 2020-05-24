@@ -23,7 +23,10 @@ except:
     newFile = 1
 
 # keeps the number of a first unlabeled frame
-firstEmpty = ((np.where(labels == 0))[0][0])
+try:
+    firstEmpty = ((np.where(labels == 0))[0][0])
+except:
+    newFile = 1
 start = 0
 
 # when resuming previously started labeling of a file
@@ -33,13 +36,11 @@ if newFile == 0:
         print("The last labeled frame is {}, do you want to start from the next frame? [y/n]".format(firstEmpty-1))
         response = str(input()) 
         if (response == 'y') | (response == 'Y'):
-            print("you selected yes")
             proceed = 1
             start = firstEmpty
         elif (response == 'n') | (response == 'N'):
             print("Please provide frame number wher you would like to start:")
             response = int(input())
-            print(response)
             start = response
             proceed = 1
 
@@ -76,9 +77,22 @@ for i in range(start, frames):
     elif (ch == 1) | (ch == 0):
         labels[i] = 1
     elif ch == 113:
-        print(labels)
-        labels = np.save('data/'+str(file)+'_Labels.npy', labels)
         break
 
+np.save('data/'+str(file)+'_Labels.npy', labels)
+allIN = 0
+allOUT = 0
+allX = 0
+other = 0
+for label in labels:
+    if label == 3:
+        allIN += 1
+    elif label == 2:
+        allOUT += 1
+    elif label == 1:
+        allX += 1
+    else:
+        other += 1
 
+print("{} frames marked as IN, {} as OUT, {} as X, {} framses are not labeled yet".format(allIN, allOUT, allX, other))
 cv2.destroyAllWindows()
