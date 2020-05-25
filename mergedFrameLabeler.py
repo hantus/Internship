@@ -51,7 +51,7 @@ data = (data > threshold).astype(np.int_)
 for i in range(start, frames):
     cv2.imwrite("data/temp/temp.png", data[i])
     frame = cv2.imread("data/temp/temp.png")
-    et, frame = cv2.threshold(frame, 0, 255, cv2.THRESH_BINARY_INV)
+    ret, frame = cv2.threshold(frame, 0, 255, cv2.THRESH_BINARY_INV)
     frame = cv2.resize(frame, (8000, 800), interpolation=cv2.INTER_NEAREST)
     for j in range(1,11):
         start_point = (800 * j , 0)
