@@ -16,9 +16,10 @@ if len(sys.argv) > 1:
 
 def getData(testSize):
     X = np.load('data/dataSet.npy')
-
+    threshold = 23
+    X = (X > threshold).astype(np.int_)
     X = np.reshape(X, (X.shape[0],640))
-
+    print(X[0])
     y = np.load('data/labels.npy')
     y = np.reshape(y, (y.shape[0]))
 
@@ -33,11 +34,12 @@ total = y_test.shape[0]
 allIN = np.count_nonzero(y_test == 3)
 allOUT = np.count_nonzero(y_test == 2)
 allX = np.count_nonzero(y_test == 1)
-print("Examples of IN {} which is {}% of the data".format(allIN, round(allIN/total, 2)))
-print("Examples of OUT {} which is {}% of the data".format(allOUT, round(allOUT/total, 2)))
-print("Examples of IN {} which is {}% of the data".format(allX, round(allX/total, 2)))
+print("Total number of test samples: {}".format(total))
+print("Examples of IN {} which is {}% of the data".format(allIN, round(allIN/total*100, 2)))
+print("Examples of OUT {} which is {}% of the data".format(allOUT, round(allOUT/total*100, 2)))
+print("Examples of IN {} which is {}% of the data".format(allX, round(allX/total*100, 2)))
 
-model = load("data/models/model1.joblib")
+model = load("data/models/model2.joblib")
 
 y_pred = model.predict(x_test)
 y_proba = model.predict_proba(x_test)
@@ -76,11 +78,11 @@ print("Ground truth X classified as IN: {}".format(grXprIN))
 print("Ground truth X classified as OUT: {}".format(grXprOUT))        
 
 data = np.reshape(x_test, (len(x_test), 8, 80))
-threshold = 23
-data = (data > threshold).astype(np.int_)
+# threshold = 23
+# data = (data > threshold).astype(np.int_)
 
 for i in range(data.shape[0]):
-
+    # print(data[i])
     cv2.imwrite('data/temp/pic.png', data[i])
     frame = cv2.imread('data/temp/pic.png')
     ret, frame = cv2.threshold(frame, 0, 255, cv2.THRESH_BINARY_INV)

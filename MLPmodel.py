@@ -11,7 +11,10 @@ from joblib import dump, load
 
 def getData(testSize):
     X = np.load('data/dataSet.npy')
+    threshold = 23
+    X = (X > threshold).astype(np.int_)
     X = np.reshape(X, (X.shape[0],640))
+
 
 
     y = np.load('data/labels.npy')
@@ -36,7 +39,7 @@ for i in range(100):
     # print("Accuracy : ", acc)
     if acc > curAcc:
         print("Accuracy : ", acc)
-        dump(model, 'data/models/model.joblib')
+        dump(model, 'data/models/model2.joblib')
         print("Saving a new model")
         curAcc = acc
 
@@ -46,20 +49,20 @@ for i in range(100):
 dummy_clf = DummyClassifier(strategy="most_frequent")
 dummy_clf.fit(x_train, y_train)
 y_pred = dummy_clf.predict(x_test)
-print("Dummy Model (most-frequent) Accuracy : ", accuracy_score(y_test, y_pred))
+print("Dummy Model (most-frequent) Accuracy : ", round(accuracy_score(y_test, y_pred),2))
 
 dummy_clf = DummyClassifier(strategy="stratified")
 dummy_clf.fit(x_train, y_train)
 y_pred = dummy_clf.predict(x_test)
-print("Dummy Model (stratified) Accuracy : ", accuracy_score(y_test, y_pred))
+print("Dummy Model (stratified) Accuracy : ", round(accuracy_score(y_test, y_pred),2))
 
 dummy_clf = DummyClassifier(strategy="prior")
 dummy_clf.fit(x_train, y_train)
 y_pred = dummy_clf.predict(x_test)
-print("Dummy Model (prior) Accuracy : ", accuracy_score(y_test, y_pred))
+print("Dummy Model (prior) Accuracy : ", round(accuracy_score(y_test, y_pred),2))
 
 dummy_clf = DummyClassifier(strategy="uniform")
 dummy_clf.fit(x_train, y_train)
 y_pred = dummy_clf.predict(x_test)
-print("Dummy Model (uniform) Accuracy : ", accuracy_score(y_test, y_pred))
+print("Dummy Model (uniform) Accuracy : ", round(accuracy_score(y_test, y_pred),2))
 

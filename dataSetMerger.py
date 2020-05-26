@@ -47,9 +47,10 @@ total = labels.shape[0]
 allIN = np.count_nonzero(labels == 3)
 allOUT = np.count_nonzero(labels == 2)
 allX = np.count_nonzero(labels == 1)
-print("Examples of IN {} which is {}% of the data".format(allIN, round(allIN/total, 2)))
-print("Examples of OUT {} which is {}% of the data".format(allOUT, round(allOUT/total, 2)))
-print("Examples of IN {} which is {}% of the data".format(allX, round(allX/total, 2)))
+print("Total number of samples: {}".format(total))
+print("Examples of IN {} which is {}% of the data".format(allIN, round(allIN/total*100, 2)))
+print("Examples of OUT {} which is {}% of the data".format(allOUT, round(allOUT/total*100, 2)))
+print("Examples of X {} which is {}% of the data".format(allX, round(allX/total*100, 2)))
 
 
 
