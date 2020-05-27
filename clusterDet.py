@@ -11,18 +11,26 @@ import sys
 if len(sys.argv) < 2:
     print('#usage clusterDet.py fileName')
     sys.exit()
+print("You can exit the application at any time by pressing q")
 
 file = str(sys.argv[1])
+# to indicate where you want to start 
+startFrame = 0
+try:
+    startFrame = int(sys.argv[2])
+except: 
+    print("no starting frame provided")
 
 class TrackedCluster:
 
-    def __init__(self, id, x, y):
+    def __init__(self, id, x, y, side):
         self.id = id
         self.x = x
         self.y = y
         # allows for a cluster not to be detected in 2 frames in a row
         self.frequency = 3
         self.assigned = True
+        self.side = side
 
 # cluster id generator
 class IdTracker:
@@ -48,20 +56,23 @@ def drawLine(img):
     return cv2.line(img, start_point, end_point, color, thickness)
 
 # checks if a line was crosses
-def crossedLine(prevY, currentY, line):
-    if (prevY >= line) & (currentY < line):
-        return -1
-    if (prevY <= line) & (currentY > line):
-        return 1
-    return 0
+def crossedLine(prev, currentY, line):
+
+    if (prev.side == 'L') & (currentY > line):
+        return 'R', 1
+    if (prev.side == 'R') & (currentY < line):
+        return 'L', -1
+    return prev.side, 0
+    
 
 
 class Cluster:
-    def __init__(self, id, points, x, y):
+    def __init__(self, id, points, x, y, side):
         self.id = id
         self.points = points
         self.x = x
         self.y = y
+        self.side = side
 
 # returns distance between 2 clusters (their mid-points)
 def clusterDistance(c1, c2):
@@ -69,7 +80,15 @@ def clusterDistance(c1, c2):
 
 # merges 2 clusters into 1
 def mergeClusters(c1, c2):
-    newCluster = Cluster(c1.id, 2, (c1.x + c2.x)/2, (c1.y + c2.y)/2)
+    totalPoints = c1.points + c2.points
+    x = ((c1.x * c1.points) + (c2.x * c2.points))/totalPoints
+    y = ((c1.y * c1.points) + (c2.y * c2.points))/totalPoints
+    side  = None
+    if y <= 4:
+        side = 'L'
+    else:
+        side = 'R'
+    newCluster = Cluster(c1.id, totalPoints, x, y, side)
     return newCluster
 
 # performs clustering on an image provided as an np array
@@ -86,7 +105,14 @@ def clusterData(arr):
                 # recursively find all points of the cluster
                 arr, xdim, ydim = checkNeighbors(arr, i, j, clusterID)
                 occurrences = np.count_nonzero(arr == clusterID)
-                clust = Cluster(clusterID, occurrences, (xdim/occurrences) +0.5, (ydim/occurrences)+0.5)
+                x = (xdim/occurrences) +0.5
+                y = (ydim/occurrences)+0.5
+                side  = None
+                if y <= 4:
+                    side = 'L'
+                else:
+                    side = 'R'
+                clust = Cluster(clusterID, occurrences, x, y, side)
                 clusters.append(clust)
                 clusterID += 1
     # merge nearby clusters
@@ -106,7 +132,6 @@ def clusterData(arr):
     if len(clusters) > 0:
         mergedClusters.append(clusters.pop(0))
         
-
     return arr, mergedClusters
 
 # recursively looks for all pixels that belong to the same cluster
@@ -134,7 +159,8 @@ trackedClusters = []
 idTracker = IdTracker()
 people = 0
 
-for i in range(frames):
+for i in range(startFrame, frames):
+
     data[i], clusters = clusterData(data[i])
 
     cv2.imwrite('data/temp/pic.png', data[i])
@@ -161,15 +187,24 @@ for i in range(frames):
                         (trackedCl.y - cl.y), 2))
                 if dist < distance:
                     nearest = trackedCl
+                    distance = dist
+                    # print("distance cluster {} and newly det cluster is {}".format(trackedCl.id, dist))
             # if we found a near cluster assigned it to tracked cluster
             if nearest != None:
-                people += crossedLine(nearest.y, cl.y, 4)
+                side, ppl = crossedLine(nearest, cl.y, 4)
+                people += ppl
+                nearest.side = side
                 nearest.x = cl.x
                 nearest.y = cl.y
                 nearest.assigned = True
             # else create a new tracked cluster
             else:
-                newTrackedCluster = TrackedCluster(idTracker.getID(), cl.x, cl.y)
+                side = None
+                if cl.y <= 4:
+                    side = 'L'
+                else:
+                    side = 'R'
+                newTrackedCluster = TrackedCluster(idTracker.getID(), cl.x, cl.y, side)
                 trackedClusters.append(newTrackedCluster)
     # decrease frequency of tracked clusters that were not found and delete if frequency reaches 0
     for trackedCl in trackedClusters:
@@ -184,7 +219,7 @@ for i in range(frames):
 
     
     # display number of ppl in the room
-    cv2.putText(frame, str(people), (20, 380),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    cv2.putText(frame, str(people), (80, 380),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
     # display frame number
     cv2.putText(frame, str(i), (20, 25),cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
     frame = drawLine(frame)
@@ -193,12 +228,13 @@ for i in range(frames):
         cv2.circle(frame, (int(cluster.y*50), int(cluster.x*50)),20,(0,255,0), -1)
     for item in trackedClusters:
         if item.assigned:
-            cv2.putText(frame, str(item.id), (int(item.y*50 - 10), int(item.x*50 + 10)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+            cv2.putText(frame, str(item.id)+ item.side, (int(item.y*50 - 10), int(item.x*50 + 10)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
     cv2.imshow(file, frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    ch = cv2.waitKey()
+    if ch == 113:
         break
-    cv2.waitKey()
+
     sleep(0.05)
 
 
