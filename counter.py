@@ -128,7 +128,7 @@ def checkNeighbors(arr, i, j, custNo):
 # load data file
 data = np.load('data/'+file+'.npy')
 # binarize the data 
-threshold = 23
+threshold = 23.5
 data = (data > threshold).astype(np.int_)
 frames = data.shape[0]
 trackedClusters = []
@@ -136,11 +136,11 @@ idTracker = IdTracker()
 people = 0
 
 # load neural model
-model = load("data/models/model2.joblib")
+model = load("data/models/modelBin.joblib")
 queue = []
 nnPeople = 0
 
-for i in range(frames):
+for i in range(1100,frames):
     nnData = np.copy(data[i])
     data[i], clusters = clusterData(data[i])
 

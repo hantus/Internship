@@ -15,12 +15,12 @@ if len(sys.argv) > 1:
     mode = int(sys.argv[1])
 
 def getData(testSize):
-    X = np.load('data/dataSet.npy')
+    X = np.load('data/dataSet2.npy')
     threshold = 23
     X = (X > threshold).astype(np.int_)
     X = np.reshape(X, (X.shape[0],640))
-    print(X[0])
-    y = np.load('data/labels.npy')
+
+    y = np.load('data/labels2.npy')
     y = np.reshape(y, (y.shape[0]))
 
     x_train , x_test, y_train, y_test = train_test_split(X, y, test_size=testSize, random_state=1)
@@ -39,7 +39,7 @@ print("Examples of IN {} which is {}% of the data".format(allIN, round(allIN/tot
 print("Examples of OUT {} which is {}% of the data".format(allOUT, round(allOUT/total*100, 2)))
 print("Examples of IN {} which is {}% of the data".format(allX, round(allX/total*100, 2)))
 
-model = load("data/models/model2.joblib")
+model = load("data/models/modelBin.joblib")
 
 y_pred = model.predict(x_test)
 y_proba = model.predict_proba(x_test)
@@ -78,20 +78,9 @@ print("Ground truth X classified as IN: {}".format(grXprIN))
 print("Ground truth X classified as OUT: {}".format(grXprOUT))        
 
 data = np.reshape(x_test, (len(x_test), 8, 80))
-# threshold = 23
-# data = (data > threshold).astype(np.int_)
+
 
 for i in range(data.shape[0]):
-    # print(data[i])
-    cv2.imwrite('data/temp/pic.png', data[i])
-    frame = cv2.imread('data/temp/pic.png')
-    ret, frame = cv2.threshold(frame, 0, 255, cv2.THRESH_BINARY_INV)
-    frame = cv2.resize(frame, (8000, 800), interpolation=cv2.INTER_NEAREST)
-    for j in range(1,11):
-        start_point = (800 * j , 0)
-        end_point = (800 * j , 800)
-        frame = cv2.line(frame, start_point, end_point, (0,0,0), 3)
-        frame = cv2.line(frame, (800 * j - 400, 0), (800 * j - 400, 800), (0,0,255), 2)
 
     # color for the labels, green if correct prediction, red if incorrect
     color = None
@@ -103,6 +92,18 @@ for i in range(data.shape[0]):
         color = (0,0,255)
         if mode == 1:
             continue
+
+    cv2.imwrite('data/temp/pic.png', data[i])
+    frame = cv2.imread('data/temp/pic.png')
+    ret, frame = cv2.threshold(frame, 0, 255, cv2.THRESH_BINARY_INV)
+    frame = cv2.resize(frame, (8000, 800), interpolation=cv2.INTER_NEAREST)
+    for j in range(1,11):
+        start_point = (800 * j , 0)
+        end_point = (800 * j , 800)
+        frame = cv2.line(frame, start_point, end_point, (0,0,0), 3)
+        frame = cv2.line(frame, (800 * j - 400, 0), (800 * j - 400, 800), (0,0,255), 2)
+
+
 
     # print ground truth and predicted label
     cv2.putText(frame, str(y_test[i]) + ' - ' + str(y_pred[i]) , (10, 750), cv2.FONT_HERSHEY_SIMPLEX, 3, color, 2)
