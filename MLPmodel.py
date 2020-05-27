@@ -11,12 +11,11 @@ from joblib import dump, load
 
 def getData(testSize):
     X = np.load('data/dataSet.npy')
+    # the below 2 lines are needed for training on binary data
     threshold = 23
     X = (X > threshold).astype(np.int_)
+
     X = np.reshape(X, (X.shape[0],640))
-
-
-
     y = np.load('data/labels.npy')
     y = np.reshape(y, (y.shape[0]))
 
@@ -39,7 +38,7 @@ for i in range(100):
     # print("Accuracy : ", acc)
     if acc > curAcc:
         print("Accuracy : ", acc)
-        dump(model, 'data/models/model2.joblib')
+        dump(model, 'data/models/modelBin.joblib')
         print("Saving a new model")
         curAcc = acc
 

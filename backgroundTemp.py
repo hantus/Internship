@@ -1,18 +1,5 @@
 import cv2
 import numpy as np
-# bck = []
-# bck2 = []
-
-# for i in range(1000):
-#     frame = cv2.imread('data/background/pic'+ str(i) +'.png', cv2.IMREAD_GRAYSCALE)
-#     frame2 = cv2.imread('data/background2/pic'+ str(i) +'.png', cv2.IMREAD_GRAYSCALE)
-#     frame = np.asfarray(frame)
-#     frame2 = np.asfarray(frame2)
-#     bck.append(frame)
-#     bck2.append(frame2)
-
-# print("background 1 average {}".format((np.asfarray(bck)).mean()))
-# print("background 2 average {}".format((np.asfarray(bck2)).mean()))
 
 background = np.load('data/background.npy')
 print('Background - average {}, min {}, max {}'.format(np.average(background), np.min(background), np.max(background)))
@@ -48,6 +35,15 @@ unique = np.unique(twoPplHat)
 print(unique[unique > np.max(background)])
 print()
 
+twopp_add = np.load('data/2ppl_add.npy')
+print('2 ppl_add - average {}, min {}, max {}'.format(np.average(twopp_add), np.min(twopp_add), np.max(twopp_add)))
+unique = np.unique(twopp_add)
+print(unique[unique > np.max(background)])
+print()
+
+background_add = np.load('data/background_add.npy')
+print('Background - average {}, min {}, max {}'.format(np.average(background_add), np.min(background_add), np.max(background_add)))
+print()
 
 
 

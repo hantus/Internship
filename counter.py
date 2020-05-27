@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from time import sleep
 from sympy.geometry import Point
-from sklearn.preprocessing import normalize
+# from sklearn.preprocessing import normalize
 import math
 import sys
 from joblib import load
