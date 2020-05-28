@@ -131,18 +131,24 @@ def clusterData(arr):
 
     if len(clusters) > 0:
         mergedClusters.append(clusters.pop(0))
+    
+    # remove the cluster from one side if it is between left and right side
+    sides = [0,0,0,0,0,0,0,0,0,0]
+
+    for cl in mergedClusters:
+        if cl.side == 'L':
+            sides[cl.id] = -1
+        else:
+           sides[cl.id] = 1 
 
     for i in range(size[1]):
         for j in range(size[0]):
             if arr[i][j] > 0:
-                side = None
-                for cl in mergedClusters:
-                    if arr[i][j] == cl.id:
-                        side = cl.side
-                        if (side == 'L') & (j > 3):
-                            arr[i][j] = 0
-                        elif (side == 'R') & (j < 4):
-                            arr[i][j] = 0
+                side = sides[arr[i][j]]
+                if (side == -1) & (j > 3):
+                    arr[i][j] = 0
+                elif (side == 1) & (j < 4):
+                    arr[i][j] = 0
 
         
     return arr, mergedClusters
@@ -173,14 +179,14 @@ idTracker = IdTracker()
 people = 0
 
 # load neural model
-model = load("data/models/modelBin.joblib")
+model = load("data/models/prep1.joblib")
 queue = []
 nnPeople = 0
 
 for i in range(startFrame,frames):
-    nnData = np.copy(data[i])
+    
     data[i], clusters = clusterData(data[i])
-
+    nnData = np.copy(data[i])
     cv2.imwrite('data/temp/pic.png', data[i])
     frame = cv2.imread('data/temp/pic.png')
     ret, frame = cv2.threshold(frame, 0, 255, cv2.THRESH_BINARY_INV)

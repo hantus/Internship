@@ -15,12 +15,13 @@ if len(sys.argv) > 1:
     mode = int(sys.argv[1])
 
 def getData(testSize):
-    X = np.load('data/dataSet2.npy')
-    threshold = 23
-    X = (X > threshold).astype(np.int_)
-    X = np.reshape(X, (X.shape[0],640))
+    X = np.load('data/preprocessedData/1person_add_preprocessed5_merged.npy')
+    # threshold = 1
+    # X = (X > threshold).astype(np.int_)
+    X = np.reshape(X, (X.shape[0],320))
+    # X = np.reshape(X, (X.shape[0],640))
 
-    y = np.load('data/labels2.npy')
+    y = np.load('data/preprocessedData/1person_add_preprocessed5_merged_Labels.npy')
     y = np.reshape(y, (y.shape[0]))
 
     x_train , x_test, y_train, y_test = train_test_split(X, y, test_size=testSize, random_state=1)
@@ -39,7 +40,7 @@ print("Examples of IN {} which is {}% of the data".format(allIN, round(allIN/tot
 print("Examples of OUT {} which is {}% of the data".format(allOUT, round(allOUT/total*100, 2)))
 print("Examples of IN {} which is {}% of the data".format(allX, round(allX/total*100, 2)))
 
-model = load("data/models/modelBin.joblib")
+model = load("data/models/prep5.joblib")
 
 y_pred = model.predict(x_test)
 y_proba = model.predict_proba(x_test)
@@ -77,7 +78,7 @@ print("Ground truth OUT classified as X: {}".format(grOUTprX))
 print("Ground truth X classified as IN: {}".format(grXprIN))        
 print("Ground truth X classified as OUT: {}".format(grXprOUT))        
 
-data = np.reshape(x_test, (len(x_test), 8, 80))
+data = np.reshape(x_test, (len(x_test), 8, 40))
 
 
 for i in range(data.shape[0]):
@@ -96,7 +97,7 @@ for i in range(data.shape[0]):
     cv2.imwrite('data/temp/pic.png', data[i])
     frame = cv2.imread('data/temp/pic.png')
     ret, frame = cv2.threshold(frame, 0, 255, cv2.THRESH_BINARY_INV)
-    frame = cv2.resize(frame, (8000, 800), interpolation=cv2.INTER_NEAREST)
+    frame = cv2.resize(frame, (4000, 800), interpolation=cv2.INTER_NEAREST)
     for j in range(1,11):
         start_point = (800 * j , 0)
         end_point = (800 * j , 800)

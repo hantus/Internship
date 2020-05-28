@@ -7,7 +7,7 @@ if len(sys.argv) < 2:
     sys.exit()
 #
 file = str(sys.argv[1])
-data = np.load('data/'+str(file)+'.npy')
+data = np.load('data/preprocessedData/'+str(file)+'.npy')
 frames = data.shape[0]
 labels = None
 # used to select a frame number if a file already exists
@@ -15,7 +15,7 @@ newFile = 0
 
 # upload the label file of create a new one if it doesn't exist
 try:
-    labels = np.load('data/'+str(file)+'_Labels.npy')
+    labels = np.load('data/preprocessedData/'+str(file)+'_Labels.npy')
     print("label file uploaded")
 except:
     print("no label file, creating array")
@@ -45,15 +45,17 @@ if newFile == 0:
             proceed = 1
 
 # binarise the images 
-threshold = 23
+
+threshold = 1
 data = (data > threshold).astype(np.int_)
 
 for i in range(start, frames):
+
     cv2.imwrite("data/temp/temp.png", data[i])
     frame = cv2.imread("data/temp/temp.png")
     ret, frame = cv2.threshold(frame, 0, 255, cv2.THRESH_BINARY_INV)
-    frame = cv2.resize(frame, (8000, 800), interpolation=cv2.INTER_NEAREST)
-    for j in range(1,11):
+    frame = cv2.resize(frame, (4000, 800), interpolation=cv2.INTER_NEAREST)
+    for j in range(1,6):
         start_point = (800 * j , 0)
         end_point = (800 * j , 800)
         frame = cv2.line(frame, start_point, end_point, (0,0,0), 3)
@@ -79,7 +81,7 @@ for i in range(start, frames):
     elif ch == 113:
         break
 
-np.save('data/'+str(file)+'_Labels.npy', labels)
+np.save('data/preprocessedData/'+str(file)+'_Labels.npy', labels)
 allIN = 0
 allOUT = 0
 allX = 0
