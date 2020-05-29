@@ -258,15 +258,16 @@ for i in range(startFrame,frames):
             else:
                 # ingnore clusters that appeared in the middle and are of size 1. They are just noise
                 if(cl.points == 1) & (cl.y > 2) & (cl.y < 5):
-                    continue
-                side = None
-                if cl.y <= 4:
-                    side = 'L'
-                else:
-                    side = 'R'
-
-                newTrackedCluster = TrackedCluster(idTracker.getID(), cl.x, cl.y, side)
-                trackedClusters.append(newTrackedCluster)
+                    data[i][data[i] == cl.id] = 0
+                else:   
+                    side = None
+                    if cl.y <= 4:
+                        side = 'L'
+                    else:
+                        side = 'R'
+    
+                    newTrackedCluster = TrackedCluster(idTracker.getID(), cl.x, cl.y, side)
+                    trackedClusters.append(newTrackedCluster)
     # decrease frequency of tracked clusters that were not found and delete if frequency reaches 0
     for trackedCl in trackedClusters:
         if trackedCl.assigned == False:

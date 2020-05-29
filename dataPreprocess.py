@@ -68,6 +68,7 @@ def clusterData(arr):
         for clust in clusters:
             if clusterDistance(tempCluster, clust) < 2:
                 mergedClust = mergeClusters(tempCluster, clust)
+                arr[arr == clust.id] = tempCluster.id
                 mergedClusters.append(mergedClust)
                 clusters.remove(clust)
                 merged = 1
@@ -117,7 +118,7 @@ def checkNeighbors(arr, i, j, custNo):
 
 
 data = np.load('data/'+file+'.npy')
-threshold = 23.5
+threshold = 23
 data = (data > threshold).astype(np.int_)
 
 for i in range(data.shape[0]):
