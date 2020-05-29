@@ -123,6 +123,7 @@ def clusterData(arr):
         for clust in clusters:
             if clusterDistance(tempCluster, clust) < 2:
                 mergedClust = mergeClusters(tempCluster, clust)
+                arr[arr == clust.id] = tempCluster.id
                 mergedClusters.append(mergedClust)
                 clusters.remove(clust)
                 merged = 1
@@ -131,7 +132,15 @@ def clusterData(arr):
 
     if len(clusters) > 0:
         mergedClusters.append(clusters.pop(0))
-    
+
+
+    # delete small clusters at the edge
+    clCopy = np.copy(mergedClusters)
+    for cl in clCopy:
+        if (cl.y < 0.85) | (cl.y > 7.0):
+            arr[arr == cl.id] = 0
+            mergedClusters.remove(cl)
+        
     # remove the cluster from one side if it is between left and right side
     sides = [0,0,0,0,0,0,0,0,0,0]
 
@@ -150,7 +159,7 @@ def clusterData(arr):
                 elif (side == 1) & (j < 4):
                     arr[i][j] = 0
 
-        
+       
     return arr, mergedClusters
 
 # recursively looks for all pixels that belong to the same cluster
@@ -186,17 +195,17 @@ nnPeople = 0
 for i in range(startFrame,frames):
     
     data[i], clusters = clusterData(data[i])
-    nnData = np.copy(data[i])
-    cv2.imwrite('data/temp/pic.png', data[i])
-    frame = cv2.imread('data/temp/pic.png')
-    ret, frame = cv2.threshold(frame, 0, 255, cv2.THRESH_BINARY_INV)
-    frame = cv2.resize(frame, (400, 400), interpolation=cv2.INTER_NEAREST)
+    # nnData = np.copy(data[i])
+    # cv2.imwrite('data/temp/pic.png', data[i])
+    # frame = cv2.imread('data/temp/pic.png')
+    # ret, frame = cv2.threshold(frame, 0, 255, cv2.THRESH_BINARY_INV)
+    # frame = cv2.resize(frame, (400, 400), interpolation=cv2.INTER_NEAREST)
 
     # if our queue already has 10 items pop the oldest sub-frame
     if len(queue) == 5:
         queue.pop(0)
     # append the new frame
-    queue.append(nnData)
+    queue.append(data[i])
     # if we have 10 frames join them toheter and get a prediction from the model
     if len(queue) == 5:
         # merge the 10 frames
@@ -218,9 +227,7 @@ for i in range(startFrame,frames):
 
 
     
-    # add 1 pixel border 
-    frame = cv2.copyMakeBorder(
-        frame, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=255)
+
 
     # marked all tracked clusters as not assigned
     for cl in trackedClusters:
@@ -231,10 +238,11 @@ for i in range(startFrame,frames):
         for cl in clusters:
             # assign the cluster to the nearest tracked cluster if exists
             nearest = None
-            distance = 2
+            distance = 2.1
             for trackedCl in trackedClusters:
                 dist = math.sqrt(pow((trackedCl.x - cl.x), 2) + pow(
                         (trackedCl.y - cl.y), 2))
+                # print("dist for tracked cl {} is {}".format(trackedCl.id, dist))
                 if dist < distance:
                     nearest = trackedCl
                     distance = dist
@@ -248,11 +256,15 @@ for i in range(startFrame,frames):
                 nearest.assigned = True
             # else create a new tracked cluster
             else:
+                # ingnore clusters that appeared in the middle and are of size 1. They are just noise
+                if(cl.points == 1) & (cl.y > 2) & (cl.y < 5):
+                    continue
                 side = None
                 if cl.y <= 4:
                     side = 'L'
                 else:
                     side = 'R'
+
                 newTrackedCluster = TrackedCluster(idTracker.getID(), cl.x, cl.y, side)
                 trackedClusters.append(newTrackedCluster)
     # decrease frequency of tracked clusters that were not found and delete if frequency reaches 0
@@ -266,7 +278,14 @@ for i in range(startFrame,frames):
             # reset frequency of all assigned clusters to 3 
             trackedCl.frequency = 3
 
-    
+    cv2.imwrite('data/temp/pic.png', data[i])
+    frame = cv2.imread('data/temp/pic.png')
+    ret, frame = cv2.threshold(frame, 0, 255, cv2.THRESH_BINARY_INV)
+    frame = cv2.resize(frame, (400, 400), interpolation=cv2.INTER_NEAREST)
+
+    # add 1 pixel border 
+    frame = cv2.copyMakeBorder(frame, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=255)
+
     # display number of ppl in the room by cluster detection
     cv2.putText(frame, str(people), (20, 380),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
     # display number of ppl in the room by neural model
@@ -275,10 +294,11 @@ for i in range(startFrame,frames):
     cv2.putText(frame, str(i), (20, 25),cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
     frame = drawLine(frame)
 
-    for cluster in clusters:
-        cv2.circle(frame, (int(cluster.y*50), int(cluster.x*50)),20,(0,255,0), -1)
+    # for cluster in clusters:
+    #     cv2.circle(frame, (int(cluster.y*50), int(cluster.x*50)),20,(0,255,0), -1)
     for item in trackedClusters:
         if item.assigned:
+            cv2.circle(frame, (int(item.y*50), int(item.x*50)),20,(0,255,0), -1)
             cv2.putText(frame, str(item.id), (int(item.y*50 - 10), int(item.x*50 + 10)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
     cv2.imshow(file, frame)

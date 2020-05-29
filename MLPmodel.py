@@ -10,14 +10,14 @@ from joblib import dump, load
 
 
 def getData(testSize):
-    X = np.load('data/preprocessedData/1person_add_preprocessed5_merged.npy')
+    X = np.load('data/preprocessedData/dataSet5.npy')
     # the below 2 lines are needed for training on binary data
     # threshold = 23
     # X = (X > threshold).astype(np.int_)
 
     X = np.reshape(X, (X.shape[0],320))
     # X = np.reshape(X, (X.shape[0],640))
-    y = np.load('data/preprocessedData/1person_add_preprocessed5_merged_Labels.npy')
+    y = np.load('data/preprocessedData/labels5.npy')
     y = np.reshape(y, (y.shape[0]))
 
     x_train , x_test, y_train, y_test = train_test_split(X, y, test_size=testSize, random_state=1)
