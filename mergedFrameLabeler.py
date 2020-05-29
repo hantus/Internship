@@ -2,12 +2,13 @@ import numpy as np
 import cv2
 import sys
 
-if len(sys.argv) < 2:
-    print('#usage mergedFrameLabeler.py fileName ')
+if len(sys.argv) < 3:
+    print('#usage mergedFrameLabeler.py fileName numOfMergedFrames')
     sys.exit()
 #
 file = str(sys.argv[1])
 data = np.load('data/preprocessedData/'+str(file)+'.npy')
+numOfFrames = int(sys.argv[2])
 frames = data.shape[0]
 labels = None
 # used to select a frame number if a file already exists
@@ -54,8 +55,8 @@ for i in range(start, frames):
     cv2.imwrite("data/temp/temp.png", data[i])
     frame = cv2.imread("data/temp/temp.png")
     ret, frame = cv2.threshold(frame, 0, 255, cv2.THRESH_BINARY_INV)
-    frame = cv2.resize(frame, (4000, 800), interpolation=cv2.INTER_NEAREST)
-    for j in range(1,6):
+    frame = cv2.resize(frame, (800*numOfFrames, 800), interpolation=cv2.INTER_NEAREST)
+    for j in range(1,numOfFrames+1):
         start_point = (800 * j , 0)
         end_point = (800 * j , 800)
         frame = cv2.line(frame, start_point, end_point, (0,0,0), 3)

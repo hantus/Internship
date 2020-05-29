@@ -15,7 +15,7 @@ def getData(testSize):
     # threshold = 23
     # X = (X > threshold).astype(np.int_)
 
-    X = np.reshape(X, (X.shape[0],320))
+    X = np.reshape(X, (X.shape[0],320)) # 320 for 5 merged frames, 640 for 10
     # X = np.reshape(X, (X.shape[0],640))
     y = np.load('data/preprocessedData/labels5.npy')
     y = np.reshape(y, (y.shape[0]))

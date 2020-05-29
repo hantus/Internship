@@ -192,6 +192,10 @@ model = load("data/models/prep5.joblib")
 queue = []
 nnPeople = 0
 
+# count number of enter and exit
+entering = 0
+exiting = 0
+
 for i in range(startFrame,frames):
     
     data[i], clusters = clusterData(data[i])
@@ -249,6 +253,10 @@ for i in range(startFrame,frames):
             # if we found a near cluster assigned it to tracked cluster
             if nearest != None:
                 side, ppl = crossedLine(nearest, cl.y, 4)
+                if ppl == 1:
+                    entering += 1
+                elif ppl == -1:
+                    exiting += 1
                 people += ppl
                 nearest.side = side
                 nearest.x = cl.x
@@ -265,7 +273,7 @@ for i in range(startFrame,frames):
                         side = 'L'
                     else:
                         side = 'R'
-    
+
                     newTrackedCluster = TrackedCluster(idTracker.getID(), cl.x, cl.y, side)
                     trackedClusters.append(newTrackedCluster)
     # decrease frequency of tracked clusters that were not found and delete if frequency reaches 0
@@ -303,10 +311,11 @@ for i in range(startFrame,frames):
             cv2.putText(frame, str(item.id), (int(item.y*50 - 10), int(item.x*50 + 10)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
     cv2.imshow(file, frame)
-    ch = cv2.waitKey()
-    if ch == 113:
-        break
-    sleep(0.05)
+    # ch = cv2.waitKey(1)
+    # if ch == 113:
+    #     break
+    # sleep(0.05)
 
 
 cv2.destroyAllWindows()
+print('{} - Recorded number of enterings: {}, recorded number of exiting: {}'.format(file, entering, exiting))
