@@ -78,6 +78,29 @@ class Cluster:
 def clusterDistance(c1, c2):
     return math.sqrt(pow(((c1.x - c2.x)/2), 2) + pow((c1.y - c2.y), 2))
 
+
+# checks if a line was crosses
+def crossedLine(prev, currentY, line):
+
+    if (prev.side == 'L') & (currentY > line):
+        return 'R', 1
+    if (prev.side == 'R') & (currentY < line):
+        return 'L', -1
+    return prev.side, 0
+
+
+class Cluster:
+    def __init__(self, id, points, x, y, side):
+        self.id = id
+        self.points = points
+        self.x = x
+        self.y = y
+        self.side = side
+
+# returns distance between 2 clusters (their mid-points)
+def clusterDistance(c1, c2):
+    return math.sqrt(pow(((c1.x - c2.x)/2), 2) + pow((c1.y - c2.y), 2))
+
 # merges 2 clusters into 1
 def mergeClusters(c1, c2):
     totalPoints = c1.points + c2.points
@@ -123,6 +146,7 @@ def clusterData(arr):
         for clust in clusters:
             if clusterDistance(tempCluster, clust) < 2:
                 mergedClust = mergeClusters(tempCluster, clust)
+                arr[arr == clust.id] = tempCluster.id
                 mergedClusters.append(mergedClust)
                 clusters.remove(clust)
                 merged = 1
@@ -131,7 +155,34 @@ def clusterData(arr):
 
     if len(clusters) > 0:
         mergedClusters.append(clusters.pop(0))
+
+
+    # delete small clusters at the edge
+    # clCopy = np.copy(mergedClusters)
+    # for cl in clCopy:
+    #     if (cl.y < 0.85) | (cl.y > 7.0):
+    #         arr[arr == cl.id] = 0
+    #         mergedClusters.remove(cl)
         
+    # remove the cluster from one side if it is between left and right side
+    # sides = [0,0,0,0,0,0,0,0,0,0]
+
+    # for cl in mergedClusters:
+    #     if cl.side == 'L':
+    #         sides[cl.id] = -1
+    #     else:
+    #        sides[cl.id] = 1 
+
+    # for i in range(size[1]):
+    #     for j in range(size[0]):
+    #         if arr[i][j] > 0:
+    #             side = sides[arr[i][j]]
+    #             if (side == -1) & (j > 3):
+    #                 arr[i][j] = 0
+    #             elif (side == 1) & (j < 4):
+    #                 arr[i][j] = 0
+
+       
     return arr, mergedClusters
 
 # recursively looks for all pixels that belong to the same cluster
@@ -164,6 +215,11 @@ people = 0
 model = load("data/models/modelRaw.joblib")
 queue = []
 nnPeople = 0
+
+
+# count number of enter and exit
+entering = 0
+exiting = 0
 
 for i in range(startFrame, frames):
     nnData = rawData[i]
@@ -208,21 +264,26 @@ for i in range(startFrame, frames):
     for cl in trackedClusters:
         cl.assigned = False
     
-    # assign found clusters to tracked clusters
+ # assign found clusters to tracked clusters
     if len(clusters) > 0:
         for cl in clusters:
             # assign the cluster to the nearest tracked cluster if exists
             nearest = None
-            distance = 2
+            distance = 2.1
             for trackedCl in trackedClusters:
                 dist = math.sqrt(pow((trackedCl.x - cl.x), 2) + pow(
                         (trackedCl.y - cl.y), 2))
+                # print("dist for tracked cl {} is {}".format(trackedCl.id, dist))
                 if dist < distance:
                     nearest = trackedCl
                     distance = dist
             # if we found a near cluster assigned it to tracked cluster
             if nearest != None:
                 side, ppl = crossedLine(nearest, cl.y, 4)
+                if ppl == 1:
+                    entering += 1
+                elif ppl == -1:
+                    exiting += 1
                 people += ppl
                 nearest.side = side
                 nearest.x = cl.x
@@ -230,13 +291,18 @@ for i in range(startFrame, frames):
                 nearest.assigned = True
             # else create a new tracked cluster
             else:
-                side = None
-                if cl.y <= 4:
-                    side = 'L'
-                else:
-                    side = 'R'
-                newTrackedCluster = TrackedCluster(idTracker.getID(), cl.x, cl.y, side)
-                trackedClusters.append(newTrackedCluster)
+                # ingnore clusters that appeared in the middle and are of size 1. They are just noise
+                if(cl.points == 1) & (cl.y > 2) & (cl.y < 5):
+                    data[i][data[i] == cl.id] = 0
+                else:   
+                    side = None
+                    if cl.y <= 4:
+                        side = 'L'
+                    else:
+                        side = 'R'
+
+                    newTrackedCluster = TrackedCluster(idTracker.getID(), cl.x, cl.y, side)
+                    trackedClusters.append(newTrackedCluster)
     # decrease frequency of tracked clusters that were not found and delete if frequency reaches 0
     for trackedCl in trackedClusters:
         if trackedCl.assigned == False:
@@ -264,10 +330,12 @@ for i in range(startFrame, frames):
             cv2.putText(frame, str(item.id), (int(item.y*50 - 10), int(item.x*50 + 10)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
     cv2.imshow(file, frame)
-    ch = cv2.waitKey()
-    if ch == 113:
-        break
-    sleep(0.05)
+    # ch = cv2.waitKey()
+    # if ch == 113:
+    #     break
+    # sleep(0.05)
 
 
 cv2.destroyAllWindows()
+print('{} - Recorded number of enterings (by clustering algorithm): {}, recorded number of exiting: {}'.format(file, entering, exiting))
+

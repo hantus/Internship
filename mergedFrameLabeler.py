@@ -7,7 +7,7 @@ if len(sys.argv) < 3:
     sys.exit()
 #
 file = str(sys.argv[1])
-data = np.load('data/preprocessedData/'+str(file)+'.npy')
+data = np.load('data/'+str(file)+'.npy')
 numOfFrames = int(sys.argv[2])
 frames = data.shape[0]
 labels = None
@@ -16,7 +16,7 @@ newFile = 0
 
 # upload the label file of create a new one if it doesn't exist
 try:
-    labels = np.load('data/preprocessedData/'+str(file)+'_Labels.npy')
+    labels = np.load('data/'+str(file)+'_Labels.npy')
     print("label file uploaded")
 except:
     print("no label file, creating array")
@@ -47,7 +47,7 @@ if newFile == 0:
 
 # binarise the images 
 
-threshold = 1
+threshold = 23.5
 data = (data > threshold).astype(np.int_)
 
 for i in range(start, frames):
@@ -82,7 +82,7 @@ for i in range(start, frames):
     elif ch == 113:
         break
 
-np.save('data/preprocessedData/'+str(file)+'_Labels.npy', labels)
+np.save('data/'+str(file)+'_Labels.npy', labels)
 allIN = 0
 allOUT = 0
 allX = 0

@@ -13,7 +13,7 @@ file = str(sys.argv[1])
 # how many frames to merge into 1 frame
 frameNum = int(sys.argv[2])
 
-data = np.load('data/preprocessedData/'+str(file)+'.npy')
+data = np.load('data/'+str(file)+'.npy')
 frames = data.shape[0]
 mergedFrames = []
 
@@ -26,5 +26,5 @@ for i in range(frames - (frameNum -1)):
 
 mergedFrames = np.asfarray(mergedFrames)
 
-np.save('data/preprocessedData/'+str(file)+ str(frameNum)+'_merged.npy', mergedFrames)
+np.save('data/'+str(file)+ str(frameNum)+'_merged.npy', mergedFrames)
 

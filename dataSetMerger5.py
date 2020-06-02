@@ -1,7 +1,7 @@
 import numpy as np
 
-dataSet1 = np.load('data/preprocessedData/1person_add_preprocessed5_merged.npy')
-dataSet2 = np.load('data/preprocessedData/2ppl_add_preprocessed5_merged.npy')
+dataSet1 = np.load('data/preprocessedData/1person_add5_merged.npy')
+dataSet2 = np.load('data/preprocessedData/2ppl_add5_merged.npy')
 # dataSet3 = np.load('data/1person_hood10_merged.npy')
 # dataSet4 = np.load('data/2ppl10_merged.npy')
 # dataSet5 = np.load('data/2ppl_1hat10_merged.npy')
@@ -24,8 +24,8 @@ for ds in dataSets:
 data = np.asarray(data)
 print(data.shape)
 
-labels1 = np.load('data/preprocessedData/1person_add_preprocessed5_merged_Labels.npy')
-labels2 = np.load('data/preprocessedData/2ppl_add_preprocessed5_merged_labels.npy')
+labels1 = np.load('data/1person_add5_merged_Labels.npy')
+labels2 = np.load('data/2ppl_add5_merged_labels.npy')
 # labels3 = np.load('data/1person_hood10_merged_Labels.npy')
 # labels4 = np.load('data/2ppl10_merged_Labels.npy')
 # labels5 = np.load('data/2ppl_1hat10_merged_Labels.npy')
