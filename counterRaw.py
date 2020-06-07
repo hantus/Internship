@@ -212,7 +212,7 @@ idTracker = IdTracker()
 people = 0
 
 # load neural model
-model = load("data/models/modelRaw.joblib")
+model = load("data/models/model-70-100.joblib")
 queue = []
 nnPeople = 0
 
@@ -330,10 +330,10 @@ for i in range(startFrame, frames):
             cv2.putText(frame, str(item.id), (int(item.y*50 - 10), int(item.x*50 + 10)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
     cv2.imshow(file, frame)
-    # ch = cv2.waitKey()
-    # if ch == 113:
-    #     break
-    # sleep(0.05)
+    ch = cv2.waitKey()
+    if ch == 113:
+        break
+    sleep(0.05)
 
 
 cv2.destroyAllWindows()
