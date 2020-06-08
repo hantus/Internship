@@ -204,7 +204,17 @@ def checkNeighbors(arr, i, j, custNo):
 data = np.load('data/'+file+'.npy')
 rawData = np.copy(data)
 # binarize the data 
-threshold = 23
+
+threshold = 0
+av = 0
+bckgrd = []
+for i in range(10):
+    frame = data[i]
+    maxTemp = np.max(frame)
+    if maxTemp > threshold:
+        threshold = maxTemp
+
+print(f"threshold {threshold}")
 data = (data > threshold).astype(np.int_)
 frames = data.shape[0]
 trackedClusters = []
