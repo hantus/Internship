@@ -9,6 +9,7 @@ import busio
 import board
 import adafruit_amg88xx
 from joblib import load
+from collections import deque
 
 
 
@@ -186,7 +187,7 @@ for i in range(15):
 # binarize the data 
 
 data = (data > threshold).astype(np.int_)
-frames = data.shape[0]
+
 
 trackedClusters = []
 idTracker = IdTracker()
@@ -194,8 +195,8 @@ people = 0
 
 
 # load neural model
-model = load("data/models/prep5.joblib")
-queue = []
+model = load("data/models/model-70-100.joblib")
+queue = deque(maxlen=10)
 nnPeople = 0
 
 
@@ -203,23 +204,23 @@ try:
 
     while True:
     
-        frame = sensor.pixels
+        data = sensor.pixels
+        data = np.asfarray(data)
+        data = (data > threshold).astype(np.int_)
+        frame, clusters = clusterData(data)
 
-        # if our queue already has 10 items pop the oldest sub-frame
-        if len(queue) == 5:
-            queue.pop(0)
         # append the new frame
         queue.append(frame)
         # if we have 10 frames join them toheter and get a prediction from the model
-        if len(queue) == 5:
+        if len(queue) == 10:
             # merge the 10 frames
             queue2 = np.asarray(queue)
             mergedArray = queue2[0]
 
-            for k in range(1, 5):
+            for k in range(1, 10):
                 mergedArray = np.hstack((mergedArray,  queue2[k]))
 
-            mergedArray = np.reshape(mergedArray, (1,320))
+            mergedArray = np.reshape(mergedArray, (1,640))
             pred = model.predict(mergedArray)
             # if pred equals 3 somebody entered, if 2 somebody left, if 1 no action
             if pred[0] == 3:
@@ -228,9 +229,6 @@ try:
             elif pred[0] == 2:
                 nnPeople -= 1
                 queue.clear()
-
-
-
 
 
         # marked all tracked clusters as not assigned

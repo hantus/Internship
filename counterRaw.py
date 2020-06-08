@@ -213,6 +213,7 @@ people = 0
 
 # load neural model
 model = load("data/models/model-70-100.joblib")
+print(sys.getsizeof(model))
 queue = []
 nnPeople = 0
 

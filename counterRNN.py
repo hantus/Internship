@@ -215,7 +215,8 @@ idTracker = IdTracker()
 people = 0
 
 # load neural model
-model = tf.keras.models.load_model('data/models/rnn/30_30_30')
+model = tf.keras.models.load_model('data/models/rnn/100per')
+print(sys.getsizeof(model))
 model.summary()
 queue = deque(maxlen=10)
 nnPeople = 0
