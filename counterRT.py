@@ -176,16 +176,18 @@ sleep(2)
 # Get max temp of background
 
 threshold = 0
+av = 0
 bckgrd = []
 for i in range(15):
     data = sensor.pixels
     frame = np.asfarray(data)
     maxTemp = np.max(frame)
+    av = np.mean(frame)
     if maxTemp > threshold:
         threshold = maxTemp
 
 # binarize the data 
-
+print(f"threshold is {threshold}, av {av}")
 data = (data > threshold).astype(np.int_)
 
 
@@ -203,7 +205,7 @@ nnPeople = 0
 try:
 
     while True:
-    
+
         data = sensor.pixels
         data = np.asfarray(data)
         data = (data > threshold).astype(np.int_)
@@ -225,9 +227,11 @@ try:
             # if pred equals 3 somebody entered, if 2 somebody left, if 1 no action
             if pred[0] == 3:
                 nnPeople += 1
+                print(f"nnpeople = {nnPeople}")
                 queue.clear()
             elif pred[0] == 2:
                 nnPeople -= 1
+                print(f"nnpeople = {nnPeople}")
                 queue.clear()
 
 
@@ -251,7 +255,10 @@ try:
                 # if we found a near cluster assigned it to tracked cluster
                 if nearest != None:
                     side, ppl = crossedLine(nearest, cl.y, 4)
+                    prevPpl = people
                     people += ppl
+                    # ~ if(people != prevPpl):
+                        # ~ print(f"blobPeople = {people}")
                     nearest.side = side
                     nearest.x = cl.x
                     nearest.y = cl.y
@@ -280,6 +287,7 @@ try:
             else :
                 # reset frequency of all assigned clusters to 3 
                 trackedCl.frequency = 3
+
 except KeyboardInterrupt:
     print("Exit program")
 
