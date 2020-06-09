@@ -16,9 +16,7 @@ if len(sys.argv) > 1:
 
 def getData(testSize):
     X = np.load('data/dataSet2.npy')
-    # threshold = 1
-    # X = (X > threshold).astype(np.int_)
-    # X = np.reshape(X, (X.shape[0],320))
+
     X = np.reshape(X, (X.shape[0],640))
 
     y = np.load('data/labels2.npy')

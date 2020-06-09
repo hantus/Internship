@@ -3,23 +3,11 @@ import cv2
 import numpy as np
 from time import sleep
 from sympy.geometry import Point
-from sklearn.preprocessing import normalize
 import math
 import sys
+from collections import deque
 
 
-if len(sys.argv) < 2:
-    print('#usage clusterDet.py fileName')
-    sys.exit()
-print("You can exit the application at any time by pressing q")
-
-file = str(sys.argv[1])
-# to indicate where you want to start 
-startFrame = 0
-try:
-    startFrame = int(sys.argv[2])
-except: 
-    print("no starting frame provided")
 
 class TrackedCluster:
 
@@ -63,7 +51,6 @@ def crossedLine(prev, currentY, line):
     if (prev.side == 'R') & (currentY < line):
         return 'L', -1
     return prev.side, 0
-    
 
 
 class Cluster:
@@ -92,7 +79,6 @@ def mergeClusters(c1, c2):
     return newCluster
 
 # performs clustering on an image provided as an np array
-# returns 
 def clusterData(arr):
     clusters = []
     clusterID = 2
@@ -123,6 +109,7 @@ def clusterData(arr):
         for clust in clusters:
             if clusterDistance(tempCluster, clust) < 2:
                 mergedClust = mergeClusters(tempCluster, clust)
+                arr[arr == clust.id] = tempCluster.id
                 mergedClusters.append(mergedClust)
                 clusters.remove(clust)
                 merged = 1
@@ -131,7 +118,8 @@ def clusterData(arr):
 
     if len(clusters) > 0:
         mergedClusters.append(clusters.pop(0))
-        
+
+       
     return arr, mergedClusters
 
 # recursively looks for all pixels that belong to the same cluster
@@ -148,94 +136,98 @@ def checkNeighbors(arr, i, j, custNo):
                 ydim += ydimR 
     return arr, xdim + i, ydim + j
 
+# Initialize senson
 
-# load data file
-data = np.load('data/'+file+'.npy')
+i2c_bus = busio.I2C(board.SCL, board.SDA)
+sensor = adafruit_amg88xx.AMG88XX(i2c_bus)
+sleep(2)
+
+# Get max temp of background
+
+threshold = 0
+
+for i in range(15):
+    data = sensor.pixels
+    frame = np.asfarray(data)
+    maxTemp = np.max(frame)
+    if maxTemp > threshold:
+        threshold = maxTemp
+
 # binarize the data 
-threshold = 23
+print(f"threshold is {threshold}, av {av}")
 data = (data > threshold).astype(np.int_)
-frames = data.shape[0]
+
+
 trackedClusters = []
 idTracker = IdTracker()
 people = 0
 
-for i in range(startFrame, frames):
 
-    data[i], clusters = clusterData(data[i])
+try:
 
-    cv2.imwrite('data/temp/pic.png', data[i])
-    frame = cv2.imread('data/temp/pic.png')
-    ret, frame = cv2.threshold(frame, 0, 255, cv2.THRESH_BINARY_INV)
-    frame = cv2.resize(frame, (400, 400), interpolation=cv2.INTER_NEAREST)
-    
-    # add 1 pixel border 
-    frame = cv2.copyMakeBorder(
-        frame, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=255)
+    while True:
 
-    # marked all tracked clusters as not assigned
-    for cl in trackedClusters:
-        cl.assigned = False
-    
-    # assign found clusters to tracked clusters
-    if len(clusters) > 0:
-        for cl in clusters:
-            # assign the cluster to the nearest tracked cluster if exists
-            nearest = None
-            distance = 2
-            for trackedCl in trackedClusters:
-                dist = math.sqrt(pow((trackedCl.x - cl.x), 2) + pow(
-                        (trackedCl.y - cl.y), 2))
-                if dist < distance:
-                    nearest = trackedCl
-                    distance = dist
-                    # print("distance cluster {} and newly det cluster is {}".format(trackedCl.id, dist))
-            # if we found a near cluster assigned it to tracked cluster
-            if nearest != None:
-                side, ppl = crossedLine(nearest, cl.y, 4)
-                people += ppl
-                nearest.side = side
-                nearest.x = cl.x
-                nearest.y = cl.y
-                nearest.assigned = True
-            # else create a new tracked cluster
-            else:
-                side = None
-                if cl.y <= 4:
-                    side = 'L'
+        data = sensor.pixels
+        data = np.asfarray(data)
+        data = (data > threshold).astype(np.int_)
+        frame, clusters = clusterData(data)
+
+
+        # marked all tracked clusters as not assigned
+        for cl in trackedClusters:
+            cl.assigned = False
+
+        # assign found clusters to tracked clusters
+        if len(clusters) > 0:
+            for cl in clusters:
+                # assign the cluster to the nearest tracked cluster if exists
+                nearest = None
+                distance = 2.1
+                for trackedCl in trackedClusters:
+                    dist = math.sqrt(pow((trackedCl.x - cl.x), 2) + pow(
+                            (trackedCl.y - cl.y), 2))
+                    # print("dist for tracked cl {} is {}".format(trackedCl.id, dist))
+                    if dist < distance:
+                        nearest = trackedCl
+                        distance = dist
+                # if we found a near cluster assigned it to tracked cluster
+                if nearest != None:
+                    side, ppl = crossedLine(nearest, cl.y, 4)
+                    prevPpl = people
+                    people += ppl
+                    if(people != prevPpl):
+                        print(f"blobPeople = {people}")
+                    nearest.side = side
+                    nearest.x = cl.x
+                    nearest.y = cl.y
+                    nearest.assigned = True
+                # else create a new tracked cluster
                 else:
-                    side = 'R'
-                newTrackedCluster = TrackedCluster(idTracker.getID(), cl.x, cl.y, side)
-                trackedClusters.append(newTrackedCluster)
-    # decrease frequency of tracked clusters that were not found and delete if frequency reaches 0
-    for trackedCl in trackedClusters:
-        if trackedCl.assigned == False:
-            trackedCl.frequency -= 1
-            if trackedCl.frequency == 0:
-                idTracker.releaseID(trackedCl.id)
-                trackedClusters.remove(trackedCl)
-        else :
-            # reset frequency of all assigned clusters to 3 
-            trackedCl.frequency = 3
+                    # ingnore clusters that appeared in the middle and are of size 1. They are just noise
+                    if(cl.points == 1) & (cl.y > 2) & (cl.y < 5):
+                        frame[frame == cl.id] = 0
+                    else:   
+                        side = None
+                        if cl.y <= 4:
+                            side = 'L'
+                        else:
+                            side = 'R'
 
-    
-    # display number of ppl in the room
-    cv2.putText(frame, str(people), (80, 380),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-    # display frame number
-    cv2.putText(frame, str(i), (20, 25),cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-    frame = drawLine(frame)
+                        newTrackedCluster = TrackedCluster(idTracker.getID(), cl.x, cl.y, side)
+                        trackedClusters.append(newTrackedCluster)
+        # decrease frequency of tracked clusters that were not found and delete if frequency reaches 0
+        for trackedCl in trackedClusters:
+            if trackedCl.assigned == False:
+                trackedCl.frequency -= 1
+                if trackedCl.frequency == 0:
+                    idTracker.releaseID(trackedCl.id)
+                    trackedClusters.remove(trackedCl)
+            else :
+                # reset frequency of all assigned clusters to 3 
+                trackedCl.frequency = 3
 
-    for cluster in clusters:
-        cv2.circle(frame, (int(cluster.y*50), int(cluster.x*50)),20,(0,255,0), -1)
-    for item in trackedClusters:
-        if item.assigned:
-            cv2.putText(frame, str(item.id)+ item.side, (int(item.y*50 - 10), int(item.x*50 + 10)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-
-    cv2.imshow(file, frame)
-    ch = cv2.waitKey()
-    if ch == 113:
-        break
-
-    sleep(0.05)
+except KeyboardInterrupt:
+    print("Exit program")
 
 
-cv2.destroyAllWindows()
+

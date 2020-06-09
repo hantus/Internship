@@ -1,27 +1,35 @@
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, LSTM#, CuDNNLSTM
+# import tensorflow as tf
+# from tensorflow.keras.models import Sequential
+# from tensorflow.keras.layers import Dense, Dropout, LSTM#, CuDNNLSTM
 import numpy as np
-from sklearn.model_selection import train_test_split
-from keras.utils import to_categorical
+# from sklearn.model_selection import train_test_split
+# from keras.utils import to_categorical
+
+labels = np.load('data/labels2.npy')
+total = labels.shape[0]
+print(f"Total samples: {total}")
+In = np.count_nonzero(labels == 3)
+out = np.count_nonzero(labels == 2)
+x = np.count_nonzero(labels == 1)
+print(f"Examples of In {In} which is {round(In*100/total,2)}% of the data")
+print(f"Examples of In {out} which is {round(out*100/total,2)}% of the data")
+print(f"Examples of In {x} which is {round(x*100/total,2)}% of the data")
 
 
 
 
+# new_model = tf.keras.models.load_model('data/models/rnn/100per')
 
+# data = np.load('data/rnn/dataUnbalanced.npy')
+# labels = np.load('data/rnn/labelsUnbalanced.npy')
+# data = np.reshape(data,(data.shape[0],10, 64))
+# x_train , x_test, y_train, y_test = train_test_split(data, labels, test_size=0.25, random_state=1)
 
-new_model = tf.keras.models.load_model('data/models/rnn/30_30_30')
+# new_model.summary()
 
-data = np.load('data/rnn/dataUnbalanced.npy')
-labels = np.load('data/rnn/labelsUnbalanced.npy')
-data = np.reshape(data,(data.shape[0],10, 64))
-x_train , x_test, y_train, y_test = train_test_split(data, labels, test_size=0.25, random_state=1)
-
-new_model.summary()
-
-# Evaluate the restored model
-loss, acc = new_model.evaluate(x_test,  y_test, verbose=2)
-print('Restored model, accuracy: {:5.2f}%'.format(100*acc))
+# # Evaluate the restored model
+# loss, acc = new_model.evaluate(x_test,  y_test, verbose=2)
+# print('Restored model, accuracy: {:5.2f}%'.format(100*acc))
 
 # print(new_model.predict(x_test).shape)
 # pred = new_model.predict(x_test)

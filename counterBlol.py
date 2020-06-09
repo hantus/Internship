@@ -3,14 +3,12 @@ import cv2
 import numpy as np
 from time import sleep
 from sympy.geometry import Point
-# from sklearn.preprocessing import normalize
 import math
 import sys
-from joblib import load
 
 
 if len(sys.argv) < 2:
-    print('#usage clusterDet.py fileName startFrame')
+    print('#usage clusterDet.py fileName')
     sys.exit()
 print("You can exit the application at any time by pressing q")
 
@@ -24,7 +22,7 @@ except:
 
 class TrackedCluster:
 
-    def __init__(self, id, x, y, side, points):
+    def __init__(self, id, x, y, side):
         self.id = id
         self.x = x
         self.y = y
@@ -32,7 +30,6 @@ class TrackedCluster:
         self.frequency = 3
         self.assigned = True
         self.side = side
-        self.points = points
 
 # cluster id generator
 class IdTracker:
@@ -49,13 +46,6 @@ class IdTracker:
     def releaseID(self, id):
         self.list[id] = True
 
-# returns an image with line drawn onto it
-def drawLine(img):
-    start_point = (200, 0)
-    end_point = (200, 400)
-    color = (0, 0, 255)
-    thickness = 2
-    return cv2.line(img, start_point, end_point, color, thickness)
 
 # checks if a line was crosses
 def crossedLine(prev, currentY, line):
@@ -79,6 +69,7 @@ class Cluster:
 def clusterDistance(c1, c2):
     return math.sqrt(pow(((c1.x - c2.x)/2), 2) + pow((c1.y - c2.y), 2))
 
+
 # merges 2 clusters into 1
 def mergeClusters(c1, c2):
     totalPoints = c1.points + c2.points
@@ -96,18 +87,20 @@ def mergeClusters(c1, c2):
 # returns 
 def clusterData(arr):
     clusters = []
+    # starting id
     clusterID = 2
     size = arr.shape
     for i in range(size[1]):
         for j in range(size[0]):
+            # if cell = 1 then it is a new cluster
             if arr[i][j] == 1:
                 cluster = clusterID
                 arr[i][j] = clusterID
                 # recursively find all points of the cluster
                 arr, xdim, ydim = checkNeighbors(arr, i, j, clusterID)
                 occurrences = np.count_nonzero(arr == clusterID)
-                x = (xdim/occurrences) +0.5
-                y = (ydim/occurrences)+0.5
+                x = (xdim/occurrences) + 0.5
+                y = (ydim/occurrences)+ 0.5
                 side  = None
                 if y <= 4:
                     side = 'L'
@@ -124,6 +117,7 @@ def clusterData(arr):
         for clust in clusters:
             if clusterDistance(tempCluster, clust) < 2:
                 mergedClust = mergeClusters(tempCluster, clust)
+                arr[arr == clust.id] = tempCluster.id
                 mergedClusters.append(mergedClust)
                 clusters.remove(clust)
                 merged = 1
@@ -132,8 +126,7 @@ def clusterData(arr):
 
     if len(clusters) > 0:
         mergedClusters.append(clusters.pop(0))
-    
-        
+       
     return arr, mergedClusters
 
 # recursively looks for all pixels that belong to the same cluster
@@ -153,34 +146,34 @@ def checkNeighbors(arr, i, j, custNo):
 
 # load data file
 data = np.load('data/'+file+'.npy')
+
 # binarize the data 
-threshold = 23
+threshold = 0
+
+#set threshold to max environment temp
+for i in range(10):
+    frame = data[i]
+    maxTemp = np.max(frame)
+    if maxTemp > threshold:
+        threshold = maxTemp
+
 data = (data > threshold).astype(np.int_)
 frames = data.shape[0]
 trackedClusters = []
 idTracker = IdTracker()
 people = 0
 
-# load neural model
-model = load("data/models/modelBin.joblib")
-queue = []
-nnPeople = 0
+# count number of enter and exit registered by the program
+entering = 0
+exiting = 0
 
-# for last recorded tracked cluster
-centrex = 0
-centrey = 0
-skipped = 0
-for i in range(startFrame,frames):
-    nnData = np.copy(data[i])
+for i in range(startFrame, frames):
     data[i], clusters = clusterData(data[i])
-
+    # use cv2 for visualisation
     cv2.imwrite('data/temp/pic.png', data[i])
     frame = cv2.imread('data/temp/pic.png')
     ret, frame = cv2.threshold(frame, 0, 255, cv2.THRESH_BINARY_INV)
     frame = cv2.resize(frame, (400, 400), interpolation=cv2.INTER_NEAREST)
-
-    
-
 
     
     # add 1 pixel border 
@@ -191,38 +184,26 @@ for i in range(startFrame,frames):
     for cl in trackedClusters:
         cl.assigned = False
     
-    
-
-    # assign found clusters to tracked clusters
+ # assign found clusters to tracked clusters
     if len(clusters) > 0:
         for cl in clusters:
             # assign the cluster to the nearest tracked cluster if exists
             nearest = None
-            distance = 2
+            maxDistance = 2.1
             for trackedCl in trackedClusters:
                 dist = math.sqrt(pow((trackedCl.x - cl.x), 2) + pow(
                         (trackedCl.y - cl.y), 2))
-                if dist < distance:
+                # print("dist for tracked cl {} is {}".format(trackedCl.id, dist))
+                if dist < maxDistance:
                     nearest = trackedCl
-                    distance = dist
-                    # print("Cluster points {}".format(cl.points))
-                    print("distance of cluster {} is {}".format(trackedCl.id, dist))
-                    if skipped == 1:
-                        dist2 = math.sqrt(pow((centrex - cl.x), 2) + pow((centrey - cl.y), 2))
-                        print("distance 2 is {}".format(dist2))
-                        if (dist2 < 0.3) & (cl.points > 2):
-                            skipped = 1
-                        else:
-                            skipped = 0
-                    else:
-                        if(dist < 0.20) & (cl.points > 2) :
-                            print("The distance is smaller")
-                            skipped = 1
-                            centrex = trackedCl.x
-                            centrey = trackedCl.y
+                    maxDistance = dist
             # if we found a near cluster assigned it to tracked cluster
             if nearest != None:
                 side, ppl = crossedLine(nearest, cl.y, 4)
+                if ppl == 1:
+                    entering += 1
+                elif ppl == -1:
+                    exiting += 1
                 people += ppl
                 nearest.side = side
                 nearest.x = cl.x
@@ -230,13 +211,18 @@ for i in range(startFrame,frames):
                 nearest.assigned = True
             # else create a new tracked cluster
             else:
-                side = None
-                if cl.y <= 4:
-                    side = 'L'
-                else:
-                    side = 'R'
-                newTrackedCluster = TrackedCluster(idTracker.getID(), cl.x, cl.y, side, cl.points)
-                trackedClusters.append(newTrackedCluster)
+                # ingnore clusters that appeared in the middle and are of size 1. They are just noise
+                if(cl.points == 1) & (cl.y > 2) & (cl.y < 5):
+                    data[i][data[i] == cl.id] = 0
+                else:   
+                    side = None
+                    if cl.y <= 4:
+                        side = 'L'
+                    else:
+                        side = 'R'
+
+                    newTrackedCluster = TrackedCluster(idTracker.getID(), cl.x, cl.y, side)
+                    trackedClusters.append(newTrackedCluster)
     # decrease frequency of tracked clusters that were not found and delete if frequency reaches 0
     for trackedCl in trackedClusters:
         if trackedCl.assigned == False:
@@ -248,45 +234,13 @@ for i in range(startFrame,frames):
             # reset frequency of all assigned clusters to 3 
             trackedCl.frequency = 3
 
-
-    
-    # if our queue already has 10 items pop the oldest sub-frame
-    if len(queue) == 10:
-        queue.pop(0)
-    # append the new frame
-    if skipped == 0:
-        queue.append(nnData)
-    # if we have 10 frames join them toheter and get a prediction from the model
-    if len(queue) == 10:
-        # merge the 10 frames
-        queue2 = np.asarray(queue)
-        mergedArray = queue2[0]
-
-        for k in range(1, 10):
-            mergedArray = np.hstack((mergedArray,  queue2[k]))
-
-        mergedArray = np.reshape(mergedArray, (1,640))
-        pred = model.predict(mergedArray)
-        # if pred equals 3 somebody entered, if 2 somebody left, if 1 no action
-        if pred[0] == 3:
-            nnPeople += 1
-            queue.clear()
-        elif pred[0] == 2:
-            nnPeople -= 1
-            queue.clear()
-
-
-
     
     # display number of ppl in the room by cluster detection
     cv2.putText(frame, str(people), (20, 380),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-    # display number of ppl in the room by neural model
-    cv2.putText(frame, str(nnPeople), (80, 380),cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 50, 255), 2)
     # display frame number
     cv2.putText(frame, str(i), (20, 25),cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-    frame = drawLine(frame)
-    if skipped:
-        cv2.putText(frame, "S", (20, 50),cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+    # draw corssing line in the middle
+    frame = cv2.line(frame, (200, 0), (200, 400), (0,0,255), 2)
 
     for cluster in clusters:
         cv2.circle(frame, (int(cluster.y*50), int(cluster.x*50)),20,(0,255,0), -1)
@@ -302,3 +256,5 @@ for i in range(startFrame,frames):
 
 
 cv2.destroyAllWindows()
+print('{} - Recorded number of enterings (by clustering algorithm): {}, recorded number of exiting: {}'.format(file, entering, exiting))
+

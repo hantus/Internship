@@ -12,7 +12,15 @@ if len(sys.argv) < 2:
 file = str(sys.argv[1])
 
 data = np.load('data/'+file+'.npy')
-threshold = 23
+# binarize the data 
+threshold = 0
+
+#set threshold to max environment temp
+for i in range(10):
+    frame = data[i]
+    maxTemp = np.max(frame)
+    if maxTemp > threshold:
+        threshold = maxTemp
 data = (data > threshold).astype(np.int_)
 print(data.shape)
 

@@ -1,22 +1,21 @@
 import numpy as np
 
-dataSet1 = np.load('data/1person_add5_merged.npy')
-dataSet2 = np.load('data/2ppl_add5_merged.npy')
-# dataSet2 = np.load('data/1person_hat10_merged.npy')
-# dataSet3 = np.load('data/1person_hood10_merged.npy')
-# dataSet4 = np.load('data/2ppl10_merged.npy')
-# dataSet5 = np.load('data/2ppl_1hat10_merged.npy')
-# dataSet6 = np.load('data/1person_add10_merged.npy')
-# dataSet7 = np.load('data/2ppl_add10_merged.npy')
+dataSet1 = np.load('data/1person10_merged.npy')
+dataSet2 = np.load('data/1person_hat10_merged.npy')
+dataSet3 = np.load('data/1person_hood10_merged.npy')
+dataSet4 = np.load('data/2ppl10_merged.npy')
+dataSet5 = np.load('data/2ppl_1hat10_merged.npy')
+dataSet6 = np.load('data/1person_add10_merged.npy')
+dataSet7 = np.load('data/2ppl_add10_merged.npy')
 
 dataSets = []
 dataSets.append(dataSet1)
 dataSets.append(dataSet2)
-# dataSets.append(dataSet3)
-# dataSets.append(dataSet4)
-# dataSets.append(dataSet5)
-# dataSets.append(dataSet6)
-# dataSets.append(dataSet7)
+dataSets.append(dataSet3)
+dataSets.append(dataSet4)
+dataSets.append(dataSet5)
+dataSets.append(dataSet6)
+dataSets.append(dataSet7)
 
 data = []
 for ds in dataSets:
@@ -25,22 +24,22 @@ for ds in dataSets:
 data = np.asarray(data)
 print(data.shape)
 
-labels1 = np.load('data/1person_add5_merged_Labels.npy')
-labels2 = np.load('data/2ppl_add5_merged_Labels.npy')
-# labels3 = np.load('data/1person_hood10_merged_Labels.npy')
-# labels4 = np.load('data/2ppl10_merged_Labels.npy')
-# labels5 = np.load('data/2ppl_1hat10_merged_Labels.npy')
-# labels6 = np.load('data/1person_add10_merged_Labels.npy')
-# labels7 = np.load('data/2ppl_add10_merged_Labels.npy')
+labels1 = np.load('data/1person10_merged_Labels.npy')
+labels2 = np.load('data/1person_hat10_merged_Labels.npy')
+labels3 = np.load('data/1person_hood10_merged_Labels.npy')
+labels4 = np.load('data/2ppl10_merged_Labels.npy')
+labels5 = np.load('data/2ppl_1hat10_merged_Labels.npy')
+labels6 = np.load('data/1person_add10_merged_Labels.npy')
+labels7 = np.load('data/2ppl_add10_merged_Labels.npy')
 
 labelSets = []
 labelSets.append(labels1)
 labelSets.append(labels2)
-# labelSets.append(labels3)
-# labelSets.append(labels4)
-# labelSets.append(labels5)
-# labelSets.append(labels6)
-# labelSets.append(labels7)
+labelSets.append(labels3)
+labelSets.append(labels4)
+labelSets.append(labels5)
+labelSets.append(labels6)
+labelSets.append(labels7)
 
 labels = []
 for ds in labelSets:
@@ -49,8 +48,8 @@ for ds in labelSets:
 labels = np.asarray(labels)
 print(labels.shape)
 
-np.save('data/dataSetRaw5.npy', data)
-np.save('data/labelsRaw5.npy', labels)
+np.save('data/dataSet.npy', data)
+np.save('data/labels.npy', labels)
 
 total = labels.shape[0]
 allIN = np.count_nonzero(labels == 3)
