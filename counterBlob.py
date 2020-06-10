@@ -2,7 +2,6 @@
 import cv2
 import numpy as np
 from time import sleep
-from sympy.geometry import Point
 import math
 import sys
 

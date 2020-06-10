@@ -39,13 +39,6 @@ class IdTracker:
     def releaseID(self, id):
         self.list[id] = True
 
-# returns an image with line drawn onto it
-def drawLine(img):
-    start_point = (200, 0)
-    end_point = (200, 400)
-    color = (0, 0, 255)
-    thickness = 2
-    return cv2.line(img, start_point, end_point, color, thickness)
 
 # checks if a line was crosses
 def crossedLine(prev, currentY, line):
@@ -176,18 +169,16 @@ sleep(2)
 # Get max temp of background
 
 threshold = 0
-av = 0
-bckgrd = []
+
 for i in range(15):
     data = sensor.pixels
     frame = np.asfarray(data)
     maxTemp = np.max(frame)
-    av = np.mean(frame)
     if maxTemp > threshold:
         threshold = maxTemp
 
 # binarize the data 
-print(f"threshold is {threshold}, av {av}")
+print(f"threshold is {threshold}")
 data = (data > threshold).astype(np.int_)
 
 

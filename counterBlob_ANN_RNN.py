@@ -9,6 +9,8 @@ from joblib import load
 import tensorflow as tf
 from collections import deque
 
+# this counter combined 3 methods of counting people: blob detection/ clustering, ANN and RNN.
+# the number of people estimated by each algorithm is displayed in the bottom left corner in the following order blob, RNN, ANN
 
 if len(sys.argv) < 2:
     print('#usage clusterDet.py fileName')

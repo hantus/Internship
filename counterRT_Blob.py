@@ -154,7 +154,7 @@ for i in range(15):
         threshold = maxTemp
 
 # binarize the data 
-print(f"threshold is {threshold}, av {av}")
+print(f"threshold is {threshold}")
 data = (data > threshold).astype(np.int_)
 
 
