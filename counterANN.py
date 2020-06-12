@@ -297,10 +297,10 @@ for i in range(startFrame, frames):
     cv2.putText(frame, str(i), (20, 25),cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
     frame = drawLine(frame)
 
-    for cluster in clusters:
-        cv2.circle(frame, (int(cluster.y*50), int(cluster.x*50)),20,(0,255,0), -1)
+
     for item in trackedClusters:
         if item.assigned:
+            cv2.circle(frame, (int(item.y*50), int(item.x*50)),20,(0,255,0), -1)
             cv2.putText(frame, str(item.id), (int(item.y*50 - 10), int(item.x*50 + 10)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
     cv2.imshow(file, frame)

@@ -1,9 +1,9 @@
 from memory_profiler import memory_usage
 from memory_profiler import profile
 from time import sleep
-import time
+# import time
 
-# @profile (precision=2)
+@profile (precision=2)
 def runProg():
     import numpy as np
     import sys
@@ -127,7 +127,7 @@ def runProg():
     trackedClusters = []
     idTracker = IdTracker()
     people = 0
-    start_time = time.time()
+    # start_time = time.time()
     for i in range(frames):
 
         data[i], clusters = clusterData(data[i])
@@ -170,7 +170,7 @@ def runProg():
                     trackedClusters.remove(trackedCl)
             else :
                 trackedCl.frequency = 3
-    print("--- %s seconds ---" % (time.time() - start_time))
+    # print("--- %s seconds ---" % (time.time() - start_time))
 
 
 

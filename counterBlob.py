@@ -150,12 +150,12 @@ data = np.load('data/'+file+'.npy')
 threshold = 0
 
 #set threshold to max environment temp
-for i in range(10):
-    frame = data[i]
+for index in range(10):
+    frame = data[index]
     maxTemp = np.max(frame)
     if maxTemp > threshold:
         threshold = maxTemp
-
+print(threshold)
 data = (data > threshold).astype(np.int_)
 frames = data.shape[0]
 trackedClusters = []
@@ -233,19 +233,19 @@ for i in range(startFrame, frames):
             # reset frequency of all assigned clusters to 3 
             trackedCl.frequency = 3
 
-    
+        
     # display number of ppl in the room by cluster detection
     cv2.putText(frame, str(people), (20, 380),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
     # display frame number
     cv2.putText(frame, str(i), (20, 25),cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
     # draw corssing line in the middle
     frame = cv2.line(frame, (200, 0), (200, 400), (0,0,255), 2)
-
-    for cluster in clusters:
-        cv2.circle(frame, (int(cluster.y*50), int(cluster.x*50)),20,(0,255,0), -1)
-    for item in trackedClusters:
-        if item.assigned:
-            cv2.putText(frame, str(item.id), (int(item.y*50 - 10), int(item.x*50 + 10)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+    
+        
+    for trackedCl in trackedClusters:
+        if trackedCl.assigned:
+            cv2.circle(frame, (int(trackedCl.y*50), int(trackedCl.x*50)),20,(0,255,0), -1)
+            cv2.putText(frame, str(trackedCl.id), (int(trackedCl.y*50 - 10), int(trackedCl.x*50 + 10)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
     cv2.imshow(file, frame)
     ch = cv2.waitKey()

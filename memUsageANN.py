@@ -1,9 +1,9 @@
 from memory_profiler import memory_usage
 from memory_profiler import profile
 from time import sleep
-import time
+# import time
 
-# @profile (precision=2)
+@profile (precision=2)
 def runProg():
 
     import numpy as np
@@ -19,7 +19,7 @@ def runProg():
     model = load("data/models/model-70-100.joblib")
     queue = []
     nnPeople = 0
-    start_time = time.time()
+    # start_time = time.time()
     for i in range(frames):
 
         queue.append(rawData[i])
@@ -38,7 +38,7 @@ def runProg():
             elif pred[0] == 2:
                 nnPeople -= 1
                 queue.clear()
-    print("--- %s seconds ---" % (time.time() - start_time))
+    # print("--- %s seconds ---" % (time.time() - start_time))
 
 
 if __name__ == '__main__':

@@ -4,8 +4,10 @@ import numpy as np
 from time import sleep
 import math
 import sys
-import tensorflow as tf
+# import tensorflowas as tf
 from collections import deque
+from tensorflow import keras
+# import tensorflow.keras.models.load_model
 
 
 if len(sys.argv) < 2:
@@ -171,7 +173,7 @@ idTracker = IdTracker()
 people = 0
 
 # load neural model
-model = tf.keras.models.load_model('data/models/rnn/100per')
+model = keras.models.load_model('data/models/rnn/100per')
 print(sys.getsizeof(model))
 model.summary()
 queue = deque(maxlen=10)
@@ -281,10 +283,9 @@ for i in range(startFrame, frames):
     cv2.putText(frame, str(i), (20, 25),cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
     frame = drawLine(frame)
 
-    for cluster in clusters:
-        cv2.circle(frame, (int(cluster.y*50), int(cluster.x*50)),20,(0,255,0), -1)
     for item in trackedClusters:
         if item.assigned:
+            cv2.circle(frame, (int(item.y*50), int(item.x*50)),20,(0,255,0), -1)
             cv2.putText(frame, str(item.id), (int(item.y*50 - 10), int(item.x*50 + 10)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
     cv2.imshow(file, frame)
