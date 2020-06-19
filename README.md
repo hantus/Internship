@@ -2,9 +2,12 @@
 <div>
 Implementation of a people counter for a 8x8 thermal sensor.
 The counter was implemented with 3 aglorithims:
- - Blob detection and tracking
- - Multi layer perceptrion
- - Recurrent Neural Network
+<br>
+<ul>
+  <li>Blob detection and tracking</li>
+  <li>Multi layer perceptrion</li>
+  <li>ecurrent Neural Network</li>
+</ul>
 
 
 </div>
