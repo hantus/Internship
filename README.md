@@ -9,3 +9,5 @@
     </div>
 <figcaption>A nice movie format</figcaption>
 </figure>
+
+<video src="./media/video1.mp4" width="320" height="200" controls preload></video>
